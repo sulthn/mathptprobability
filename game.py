@@ -13,12 +13,27 @@ class Player:
         self.state = -1
         self.points = 0
         self.name = name
+        self.turn = 0
+        self.logs = []
+
     def print(self):
         print("player =", self.name, \
-             "points =", self.points, \
+            "points =", self.points, \
             "pos =", self.pos, \
             "remaining spaces =", self.remaining_spaces)
         print("state =", "+-"[self.state])
+    
+    def log(self, land, roll, dot):
+        self.turn += 1
+        self.logs.append((f"turn = {self.turn}", \
+            f"Player = {self.name}", \
+            f"Rolled = {roll}", \
+            f"Landed on = {land}", \
+            f"Position = {self.pos}", \
+            f"Points = {self.points}", \
+            f"Remaining Spaces = {self.remaining_spaces}", \
+            f"State = {"+-"[self.state]}", \
+            f"Dot = {dot}"))
 
     
 die = (1, 2, 3, 4, 3, 2)
@@ -31,34 +46,34 @@ remaining_players = 4
 
 players = [p1, p2, p3, p4]
 
-won = []
+winner = Player("")
 
 turns = 1
 player_index = 0
 current_turn = players[player_index]
 
 while remaining_players > 0:
-    if current_turn.remaining_spaces == 0:      # No remaining spaces left
-        if (len(won) == 0):                     # If this is the first player to finish
-            won.append(current_turn)            # additional two points
+    if current_turn.remaining_spaces <= 0:  # No remaining spaces left
+        if (winner is not None):            # If this is the first player to finish
+            winner = current_turn           # additional two points to the finisher
 
-        player_index = (player_index + 1) % 4   # Next player
-        current_turn = players[player_index]
-        remaining_players -= 1                   # Decrease player count
-
-        print(remaining_players)
+        player_index = (player_index + 1) % 4   # Next player index
+        current_turn = players[player_index]    # Change the turn to the next player
+        remaining_players -= 1                  # Decrease player count
         continue
     
     roll = die[random.randint(0, 5)]    # Roll die
 
     # If the roll is more than the available spaces
     if (current_turn.remaining_spaces - roll < 0) and current_turn.remaining_spaces <= 4: # (1, 2, 3, 4, 3, 2) 
-        print("roll =", roll)
-        current_turn.print()
-        input("re-roll")
-        continue    # Then re-roll
+        current_turn.log("re-roll", roll, "no dot") # Log turn
+        layer_index = (player_index + 1) % 4        # Next player index
+        current_turn = players[player_index]        # Change the turn to the next player
+        continue                                    # Continue to the next player
 
-    if (current_turn.remaining_spaces - roll < 0):
+    temp_pos = current_turn.pos
+
+    if (current_turn.remaining_spaces - roll <= 0):
         current_turn.remaining_spaces -= roll       # Decrease the remaining spaces from roll
         current_turn.pos += roll + 1                # Change position
     else:
@@ -68,24 +83,22 @@ while remaining_players > 0:
     
     # If the current state is different than the state on the position then
     if (current_turn.state != ((current_turn.pos - 1) % 2)):
-        print("greendot")
+        dot = "greendot"
         current_turn.points += 1    # Add point to player
     else:
-        print("blackdot")           # If not, black dot
+        dot = "blackdot"            # If not, black dot
 
-    current_turn.state = current_turn.pos % 2   # Set the state
-
-    print("roll =", roll)
-    current_turn.print()
-    print("=== END OF TURN ===")
-    input()
+    current_turn.state = current_turn.pos % 2       # Set the state
+    current_turn.log(temp_pos + roll, roll, dot)    # Log turn
     
-    player_index = (player_index + 1) % 4
-    current_turn = players[player_index]        
+    player_index = (player_index + 1) % 4   # Next player index
+    current_turn = players[player_index]    # Change the turn to the next player
 
-won[0].points += 2    
+winner.points += 2
 
-print(won[0].name)
+print(winner.name, "finished first!")
 
 for i in range(4):
-    players[i].print()
+    for i in players[i].logs:
+        print(i)
+    print()
