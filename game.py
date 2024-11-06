@@ -32,7 +32,7 @@ class Player:
             f"Position = {self.pos}", \
             f"Points = {self.points}", \
             f"Remaining Spaces = {self.remaining_spaces}", \
-            f"State = {"+-"[self.state]}", \
+            f"State = {'+-'[self.state]}", \
             f"Dot = {dot}"))
 
     
